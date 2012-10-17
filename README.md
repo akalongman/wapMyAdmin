@@ -1,0 +1,4 @@
+wapMyAdmin
+==========
+
+phpMyAdmin for wap
