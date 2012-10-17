@@ -1,10 +1,9 @@
 <?php
 /**
-* @version		$Id: wapmyadmin.php 3 2011-12-30 00:08:16Z akalongman@gmail.com $
-* @package	wapMyAdmin
-* @copyright	Copyright (C) 20010 - 2011 wapMyAdmin Project. All rights reserved.
-* @license		GNU General Public License version 2 or later
-*/
+ * @package		wapMyAdmin
+ * @copyright		Copyright (C) 2010 - 2012 Avtandil Kikabidze (LONGMAN). All rights reserved.
+ * @license			GNU General Public License version 2 or later.
+ */
 
 
 error_reporting(E_ALL);
@@ -103,62 +102,24 @@ wapMyAdmin (v 1.5)
 
 <?php
 
-function db_connect()
+abstract class WMA
 {
-	global $start, $mysql_host;
-	$mysql_host = !empty($_SESSION["mysql_host"]) ? $_SESSION["mysql_host"] : '';
-	$mysql_login = !empty($_SESSION["mysql_login"]) ? $_SESSION["mysql_login"] : '';
-	$mysql_pass = !empty($_SESSION["mysql_pass"]) ? $_SESSION["mysql_pass"] : '';
 	
-	$link = @mysql_connect($mysql_host, $mysql_login, $mysql_pass);
-	if (!$link)
+	
+	public static function db_connect()
 	{
-		echo '<span class="off">Can\'t connect to MySQL!<br/>';
-		echo mysql_error().'</span><br/>';
-		echo '<a href="'.$_SERVER["PHP_SELF"].'">&lt;&lt; Main</a>';
-		echo '</div>';
-		echo '<div class="z">';
-		echo 'wapMyAdmin is Free Software released under the GNU/GPL License.';
-		echo '<br/>';
-		echo round(microtime(true) - $start, 4).' sec';
-		echo '</div>';
-		echo '</div>';
-		echo '</body>';
-		echo '</html>';
-		ob_end_flush();
-		exit();
-	}	
-	return $link;
-}
-
-
-function db_select($link)
-{
-	global $start;
-	if (isset($_REQUEST["db"]))
-	{
-		$db = $_REQUEST["db"];
-		$_SESSION["db"] = $db;
-	}
-	else if (isset($_SESSION["db"])) 
-	{
-		$db = $_SESSION["db"];
-	}
-	else 
-	{
-		$db = null;
-	}
-
-	if ($db)
-	{
-		$select_db = @mysql_select_db($db, $link);
-		if (!$select_db)
+		global $start, $mysql_host;
+		$mysql_host = !empty($_SESSION["mysql_host"]) ? $_SESSION["mysql_host"] : '';
+		$mysql_login = !empty($_SESSION["mysql_login"]) ? $_SESSION["mysql_login"] : '';
+		$mysql_pass = !empty($_SESSION["mysql_pass"]) ? $_SESSION["mysql_pass"] : '';
+		
+		$link = @mysql_connect($mysql_host, $mysql_login, $mysql_pass);
+		if (!$link)
 		{
-			echo '<span class="off">Can\'t select database '.$db.'!<br/>';
+			echo '<span class="off">Can\'t connect to MySQL!<br/>';
 			echo mysql_error().'</span><br/>';
 			echo '<a href="'.$_SERVER["PHP_SELF"].'">&lt;&lt; Main</a>';
 			echo '</div>';
-
 			echo '<div class="z">';
 			echo 'wapMyAdmin is Free Software released under the GNU/GPL License.';
 			echo '<br/>';
@@ -169,28 +130,76 @@ function db_select($link)
 			echo '</html>';
 			ob_end_flush();
 			exit();
-		}
+		}	
+		return $link;
 	}
-	return $db;
-}
-
-function db_pathway()
-{
-	global $mysql_host, $mod, $db, $tb, $SID;
-	if ($mod && $mysql_host)
+	
+	
+	public static function db_select($link)
 	{
-		echo '<a href="'.$_SERVER["PHP_SELF"].'?'.$SID.'&amp;mod=listdb">Server: `'.$mysql_host.'` </a>';
-		if ($mod != 'listdb') 
+		global $start;
+		if (isset($_REQUEST["db"]))
 		{
-			echo ' &gt;  <a href="'.$_SERVER["PHP_SELF"].'?'.$SID.'&amp;mod=listtb">Database: `'.$db.'` </a>';
+			$db = $_REQUEST["db"];
+			$_SESSION["db"] = $db;
 		}
-		if ($tb) 
+		else if (isset($_SESSION["db"])) 
 		{
-			echo ' &gt;  <a href="'.$_SERVER["PHP_SELF"].'?'.$SID.'&amp;mod=tbdetail&amp;tb='.$tb.'">Table: `'.$tb.'` </a>';
+			$db = $_SESSION["db"];
 		}
-		echo '<br/>';
-		echo '<hr/>';
-	}	
+		else 
+		{
+			$db = null;
+		}
+	
+		if ($db)
+		{
+			$select_db = @mysql_select_db($db, $link);
+			if (!$select_db)
+			{
+				echo '<span class="off">Can\'t select database '.$db.'!<br/>';
+				echo mysql_error().'</span><br/>';
+				echo '<a href="'.$_SERVER["PHP_SELF"].'">&lt;&lt; Main</a>';
+				echo '</div>';
+	
+				echo '<div class="z">';
+				echo 'wapMyAdmin is Free Software released under the GNU/GPL License.';
+				echo '<br/>';
+				echo round(microtime(true) - $start, 4).' sec';
+				echo '</div>';
+				echo '</div>';
+				echo '</body>';
+				echo '</html>';
+				ob_end_flush();
+				exit();
+			}
+		}
+		return $db;
+	}
+	
+	public static function db_pathway()
+	{
+		global $mysql_host, $mod, $db, $tb, $SID;
+		if ($mod && $mysql_host)
+		{
+			echo '<a href="'.$_SERVER["PHP_SELF"].'?'.$SID.'&amp;mod=listdb">Server: `'.$mysql_host.'` </a>';
+			if ($mod != 'listdb') 
+			{
+				echo ' &gt;  <a href="'.$_SERVER["PHP_SELF"].'?'.$SID.'&amp;mod=listtb">Database: `'.$db.'` </a>';
+			}
+			if ($tb) 
+			{
+				echo ' &gt;  <a href="'.$_SERVER["PHP_SELF"].'?'.$SID.'&amp;mod=tbdetail&amp;tb='.$tb.'">Table: `'.$tb.'` </a>';
+			}
+			echo '<br/>';
+			echo '<hr/>';
+		}	
+		
+	}
+	
+	
+	
+	
 	
 }
 	
@@ -245,9 +254,9 @@ switch($mod)
 		}
 		
 		
-		$link = db_connect();
-		$db = db_select($link);
-		db_pathway();
+		$link = WMA::db_connect();
+		$db = WMA::db_select($link);
+		WMA::db_pathway();
 		
 				
 		$db_list = mysql_list_dbs($link);
@@ -261,9 +270,9 @@ switch($mod)
 	
 	
 	case 'listtb':
-		$link = db_connect();
-		$db = db_select($link);
-		db_pathway();
+		$link = WMA::db_connect();
+		$db = WMA::db_select($link);
+		WMA::db_pathway();
 
 		echo '<a href="'.$_SERVER["PHP_SELF"].'?'.$SID.'&amp;mod=query">SQL</a> | ';
 		//echo '<a href="'.$_SERVER["PHP_SELF"].'?'.$SID.'&amp;mod=export&amp;db='.$db.'">Export</a> | ';
@@ -286,9 +295,9 @@ switch($mod)
 		break;
 	
 	case 'tbdetail';
-		$link = db_connect();
-		$db = db_select($link);
-		db_pathway();
+		$link = WMA::db_connect();
+		$db = WMA::db_select($link);
+		WMA::db_pathway();
 		
 		$result = mysql_query("SELECT * FROM `".$tb."`", $link);
 		$fields = mysql_num_fields($result);
@@ -325,9 +334,9 @@ switch($mod)
 
 
 	case 'fielddetail':
-		$link = db_connect();
-		$db = db_select($link);
-		db_pathway();
+		$link = WMA::db_connect();
+		$db = WMA::db_select($link);
+		WMA::db_pathway();
 		
 		$result = mysql_query("SELECT * FROM `".$tb."`", $link);
 		$type = mysql_field_type($result, $i);
@@ -344,9 +353,9 @@ switch($mod)
 	
 	
 	case 'viewrow';
-		$link = db_connect();
-		$db = db_select($link);
-		db_pathway();
+		$link = WMA::db_connect();
+		$db = WMA::db_select($link);
+		WMA::db_pathway();
 
 		$result = mysql_query("SELECT * FROM `".$tb."`", $link);
 		$max = mysql_num_rows($result);
@@ -389,9 +398,9 @@ switch($mod)
 	
 	
 	case 'changefieldresult':
-		$link = db_connect();
-		$db = db_select($link);
-		db_pathway();
+		$link = WMA::db_connect();
+		$db = WMA::db_select($link);
+		WMA::db_pathway();
 		
 		$result = mysql_query("SELECT * FROM `".$tb."`", $link);
 		$type = mysql_field_type($result, $i);
@@ -434,9 +443,9 @@ switch($mod)
 	
 	
 	case 'addfieldresult':
-		$link = db_connect();
-		$db = db_select($link);
-		db_pathway();
+		$link = WMA::db_connect();
+		$db = WMA::db_select($link);
+		WMA::db_pathway();
 		
 		$change = isset($_POST["change"]) ? trim(mysql_real_escape_string($_POST["change"])) : '';
 	
@@ -466,9 +475,9 @@ switch($mod)
 	
 	
 	case 'query':
-		$link = db_connect();
-		$db = db_select($link);
-		db_pathway();
+		$link = WMA::db_connect();
+		$db = WMA::db_select($link);
+		WMA::db_pathway();
 		
 		if ($tb) 
 		{
@@ -509,9 +518,9 @@ switch($mod)
 	
 	
 	case 'addquery':
-		$link = db_connect();
-		$db = db_select($link);
-		db_pathway();
+		$link = WMA::db_connect();
+		$db = WMA::db_select($link);
+		WMA::db_pathway();
 
 		$query = isset($_POST["query"]) ? trim($_POST["query"]) : '';
 		
@@ -571,9 +580,9 @@ switch($mod)
 	
 	
 	case 'tbdrop':
-		$link = db_connect();
-		$db = db_select($link);
-		db_pathway();
+		$link = WMA::db_connect();
+		$db = WMA::db_select($link);
+		WMA::db_pathway();
 		
 		$confirm = isset($_POST["confirm"]) ? true : false;
 		$cancel = isset($_POST["cancel"]) ? true : false;
@@ -607,9 +616,9 @@ switch($mod)
 	
 	
 	case 'tbempty':
-		$link = db_connect();
-		$db = db_select($link);
-		db_pathway();
+		$link = WMA::db_connect();
+		$db = WMA::db_select($link);
+		WMA::db_pathway();
 		
 		$confirm = isset($_POST["confirm"]) ? true : false;
 		$cancel = isset($_POST["cancel"]) ? true : false;
@@ -644,9 +653,9 @@ switch($mod)
 	
 	
 	case 'import':
-		$link = db_connect();
-		$db = db_select($link);
-		db_pathway();
+		$link = WMA::db_connect();
+		$db = WMA::db_select($link);
+		WMA::db_pathway();
 	
 		echo '<form enctype="multipart/form-data" action="'.$_SERVER["SCRIPT_NAME"].'?'.$SID.'&amp;mod=addimport" method="post"><div>';
 		echo 'Upload SQL file:<br/>';
@@ -663,9 +672,9 @@ switch($mod)
 	
 	
 	case 'addimport':
-		$link = db_connect();
-		$db = db_select($link);
-		db_pathway();
+		$link = WMA::db_connect();
+		$db = WMA::db_select($link);
+		WMA::db_pathway();
 		
 		$err = '';
 		
@@ -721,9 +730,9 @@ switch($mod)
 	
 	
 	case 'info':
-		$link = db_connect();
-		$db = db_select($link);
-		db_pathway();
+		$link = WMA::db_connect();
+		$db = WMA::db_select($link);
+		WMA::db_pathway();
 		
 		$query = mysql_query("SHOW GLOBAL VARIABLES");
 		
